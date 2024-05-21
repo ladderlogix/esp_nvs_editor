@@ -1,6 +1,7 @@
-from esp_nvs_editor import read_nvs, write_nvs, write_nvs_edit, read_nvs_edit
+from esp_nvs_editor import check_nvs_crc32, fix_nvs_crc32, read_nvs, read_nvs_edit, write_nvs, write_nvs_edit 
 
 import argparse
+import io
 
 def main():
     parser = argparse.ArgumentParser()
@@ -16,6 +17,13 @@ def main():
     bin_parser.add_argument("output", help="Binary file output location")
     bin_parser.add_argument("-s", "--size", help="Size of nvs partition", type=int, default=-1)
 
+    check_parser = subparsers.add_parser("check", help="Checks if nvs binary partition is valid")
+    check_parser.add_argument("input", help="Binary file to check")
+
+    fix_parser = subparsers.add_parser("fix", help="Attempts to fix an nvs binary partition")
+    fix_parser.add_argument("input", help="Binary file to fix")
+    fix_parser.add_argument("output", help="Fixed binary file output")
+
     args = parser.parse_args()
 
     if args.command == "json":
@@ -30,6 +38,20 @@ def main():
 
         with open(args.output, "wb") as h:
             write_nvs(nvs, h, partition_size=args.size)
+    elif args.command == "check":
+        with open(args.input, "rb") as h:
+            nvs = read_nvs(h)
+
+        print(check_nvs_crc32(nvs))
+    elif args.command == "fix":
+        with open(args.input, "rb") as h:
+            data = h.read()
+            nvs = read_nvs(io.BytesIO(data))
+
+        fix_nvs_crc32(nvs)
+
+        with open(args.output, "wb") as h:
+            write_nvs(nvs, h, partition_size=len(data))
 
 if __name__ == "__main__":
     main()
