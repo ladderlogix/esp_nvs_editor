@@ -1,6 +1,6 @@
 # ESP NVS Editor
 
-Tool to read and write ESP NVS partitions.
+Tool to edit ESP NVS partitions.
 
 ## Disclaimer
 
